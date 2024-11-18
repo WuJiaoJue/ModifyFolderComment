@@ -1,0 +1,7 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\shell\ModifyFolderComment]
+@="修改文件夹备注"
+
+[HKEY_CLASSES_ROOT\Directory\shell\ModifyFolderComment\command]
+@="wscript.exe \"E:\tools\MFC\RunModifyFolderComment.vbs\" \"%1\""

@@ -15,6 +15,10 @@ $form.FormBorderStyle = "FixedDialog"
 $form.MaximizeBox = $false
 $form.MinimizeBox = $false
 
+# 设置 AcceptButton 和 CancelButton
+$form.AcceptButton = $null  # 暂时设置为 null，稍后指定
+$form.CancelButton = $buttonCancel
+
 # 添加标签
 $label = New-Object System.Windows.Forms.Label
 $label.Text = "请输入文件夹的备注信息："
@@ -78,6 +82,9 @@ $buttonCancel.Add_Click({
     $form.Close()
 })
 $form.Controls.Add($buttonCancel)
+
+# 设置 AcceptButton 为 $buttonOk
+$form.AcceptButton = $buttonOk
 
 # 显示表单并获取结果
 $result = $form.ShowDialog()

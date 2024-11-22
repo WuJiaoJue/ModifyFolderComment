@@ -28,6 +28,29 @@ $textBox.Size = New-Object System.Drawing.Size(360,20)
 $textBox.Location = New-Object System.Drawing.Point(10,50)
 $form.Controls.Add($textBox)
 
+# 获取现有备注并显示在文本框中
+$existingComment = $null
+$iniPath = Join-Path $FolderPath 'desktop.ini'
+
+if (Test-Path $iniPath) {
+    try {
+        $iniContent = Get-Content $iniPath -Encoding Unicode
+        foreach ($line in $iniContent) {
+            if ($line -match '^InfoTip\s*=\s*(.*)$') {
+                $existingComment = $matches[1].Trim()
+                break
+            }
+        }
+    }
+    catch {
+        # 读取 desktop.ini 失败，忽略
+    }
+}
+
+if (-not [string]::IsNullOrWhiteSpace($existingComment)) {
+    $textBox.Text = $existingComment
+}
+
 # 添加确认按钮
 $buttonOk = New-Object System.Windows.Forms.Button
 $buttonOk.Text = "确定"

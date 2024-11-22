@@ -4,4 +4,4 @@
 @="修改文件夹备注"
 
 [HKEY_CLASSES_ROOT\Directory\shell\ModifyFolderComment\command]
-@="wscript.exe \"E:\tools\MFC\RunModifyFolderComment.vbs\" \"%1\""
+@="wscript.exe \"{app}\\RunModifyFolderComment.vbs\" \"%1\""

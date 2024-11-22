@@ -8,11 +8,13 @@ OutputBaseFilename=install
 Compression=lzma2
 SolidCompression=yes
 
+[InstallDelete]
+Type: files; Name: "{app}\RunModifyFolderComment.vbs.bak"
+
 [Files]
 ; 包含可执行文件和脚本
-Source: "E:\tools\MFC\ModifyFolderComment.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\tools\MFC\RunModifyFolderComment.vbs"; DestDir: "{app}"; Flags: ignoreversion
-Source: "AddContextMenuOption.reg"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ModifyFolderComment.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "RunModifyFolderComment.vbs"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\ModifyFolderComment"; Filename: "{app}\ModifyFolderComment.exe"
@@ -22,6 +24,26 @@ Name: "{group}\ModifyFolderComment"; Filename: "{app}\ModifyFolderComment.exe"
 Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment"; ValueType: string; ValueName: ""; ValueData: "修改文件夹备注"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment\command"; ValueType: string; ValueName: ""; ValueData: "wscript.exe ""{app}\RunModifyFolderComment.vbs"" ""%1"""; Flags: uninsdeletevalue
 
-[Run]
-; 可选：运行注册表导入
-Filename: "regedit.exe"; Parameters: "/s ""{app}\AddContextMenuOption.reg"""; Flags: runhidden
+[Code]
+procedure ReplaceInFile(const FileName, SearchString, ReplaceString: string);
+var
+  Lines: TArrayOfString;
+  i: Integer;
+begin
+  if LoadStringsFromFile(FileName, Lines) then
+  begin
+    for i := 0 to GetArrayLength(Lines) - 1 do
+    begin
+      StringChangeEx(Lines[i], SearchString, ReplaceString, True);
+    end;
+    SaveStringsToFile(FileName, Lines, False);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    ReplaceInFile(ExpandConstant('{app}\RunModifyFolderComment.vbs'), '{app}', ExpandConstant('{app}'));
+  end;
+end;

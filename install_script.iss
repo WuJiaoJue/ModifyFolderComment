@@ -1,5 +1,4 @@
-﻿; Inno Setup 脚本示例
-[Setup]
+﻿[Setup]
 AppName=ModifyFolderComment
 AppVersion=1.0
 DefaultDirName={commonpf}\ModifyFolderComment

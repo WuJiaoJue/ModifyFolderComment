@@ -1,4 +1,6 @@
-﻿param (
+﻿# >>> Invoke-PS2EXE -InputFile "ModifyFolderComment.ps1" -OutputFile "ModifyFolderComment.exe" -NoConsole
+
+param (
     [string]$FolderPath
 )
 

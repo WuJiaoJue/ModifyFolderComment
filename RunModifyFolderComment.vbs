@@ -1,3 +1,4 @@
 Set objShell = CreateObject("Shell.Application")
-strExe = """{app}\ModifyFolderComment.exe"" """ & WScript.Arguments(0) & """"
-objShell.ShellExecute "{app}\ModifyFolderComment.exe", Chr(34) & WScript.Arguments(0) & Chr(34), "", "open", 1
+folderPath = WScript.Arguments(0)
+exePath = "{app}\ModifyFolderComment.exe"
+objShell.ShellExecute exePath, Chr(34) & folderPath & Chr(34), "", "runas", 1

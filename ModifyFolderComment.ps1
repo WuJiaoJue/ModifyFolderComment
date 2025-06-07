@@ -6,6 +6,18 @@ param (
 
 Add-Type -AssemblyName System.Windows.Forms
 
+# 检查是否以管理员身份运行
+function Test-Admin {
+    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+if (-not (Test-Admin)) {
+    [System.Windows.Forms.MessageBox]::Show('请以管理员身份运行此程序，否则备注可能无法生效。', '权限不足', 'OK', 'Warning')
+    exit
+}
+
 # 创建输入框窗口
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "修改文件夹备注"
@@ -17,7 +29,7 @@ $form.MinimizeBox = $false
 
 # 设置 AcceptButton 和 CancelButton
 $form.AcceptButton = $null  # 暂时设置为 null，稍后指定
-$form.CancelButton = $buttonCancel
+$form.CancelButton = $null  # 先设为 null，后面再赋值
 
 # 添加标签
 $label = New-Object System.Windows.Forms.Label
@@ -83,8 +95,9 @@ $buttonCancel.Add_Click({
 })
 $form.Controls.Add($buttonCancel)
 
-# 设置 AcceptButton 为 $buttonOk
+# 设置 AcceptButton 和 CancelButton
 $form.AcceptButton = $buttonOk
+$form.CancelButton = $buttonCancel
 
 # 显示表单并获取结果
 $result = $form.ShowDialog()
@@ -97,7 +110,7 @@ if ($result -ne [System.Windows.Forms.DialogResult]::OK) {
 $comment = $form.Tag
 
 # 检查是否输入了备注
-if ([string]::IsNullOrWhiteSpace($comment)) {
+if ($null -eq $comment) {
     exit
 }
 
@@ -110,28 +123,18 @@ try {
 
     # 创建或修改 desktop.ini 文件
     $iniPath = Join-Path $FolderPath 'desktop.ini'
-
-    # 初始化一个哈希表来存储 ini 文件内容
     $iniHash = @{}
-
-    # 如果 desktop.ini 存在，读取其内容
     if (Test-Path $iniPath) {
         $iniContent = Get-Content $iniPath -Encoding Unicode
         $currentSection = ''
         foreach ($line in $iniContent) {
-            # 忽略空行
-            if ([string]::IsNullOrWhiteSpace($line)) {
-                continue
-            }
-            # 检查是否是节名
-            if ($line -match '^\[(.+)\]$') {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            if ($line -match '^[\[](.*)[\]]$') {
                 $currentSection = $matches[1]
                 if (-not $iniHash.ContainsKey($currentSection)) {
                     $iniHash[$currentSection] = @{}
                 }
-            }
-            # 检查是否是键值对
-            elseif ($line -match '^(.*?)=(.*)$') {
+            } elseif ($line -match '^(.*?)=(.*)$') {
                 $key = $matches[1].Trim()
                 $value = $matches[2].Trim()
                 if (-not [string]::IsNullOrEmpty($currentSection)) {
@@ -140,16 +143,26 @@ try {
             }
         }
     }
-
-    # 确保存在 [.ShellClassInfo] 节
     if (-not $iniHash.ContainsKey('.ShellClassInfo')) {
         $iniHash['.ShellClassInfo'] = @{}
     }
-
-    # 更新或添加 InfoTip 属性
-    $iniHash['.ShellClassInfo']['InfoTip'] = $comment
-
-    # 将哈希表内容写回到 desktop.ini 文件
+    if ([string]::IsNullOrWhiteSpace($comment)) {
+        # 备注为空时删除 InfoTip 字段
+        $iniHash['.ShellClassInfo'].Remove('InfoTip') | Out-Null
+    } else {
+        $iniHash['.ShellClassInfo']['InfoTip'] = $comment
+    }
+    # 清理空节
+    $sectionsToRemove = @()
+    foreach ($section in $iniHash.Keys) {
+        if ($iniHash[$section].Count -eq 0) {
+            $sectionsToRemove += $section
+        }
+    }
+    foreach ($section in $sectionsToRemove) {
+        $iniHash.Remove($section)
+    }
+    # 写回 desktop.ini
     $output = New-Object System.Collections.Generic.List[string]
     foreach ($section in $iniHash.Keys) {
         $output.Add("[$section]")
@@ -157,31 +170,23 @@ try {
             $value = $iniHash[$section][$key]
             $output.Add("$key=$value")
         }
-        $output.Add("")  # 添加空行分隔
+        $output.Add("")
     }
-
-    # 以 Unicode 编码写入内容到 desktop.ini
     Set-Content -Path $iniPath -Value $output -Encoding Unicode -Force
-
-    # 设置 desktop.ini 为隐藏和系统文件
     [System.IO.File]::SetAttributes($iniPath, 'Hidden, System')
-
     # 强制资源管理器刷新
     Add-Type @"
 using System;
 using System.Runtime.InteropServices;
-
 public class RefreshExplorer {
     [DllImport("shell32.dll", SetLastError = true)]
     public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 }
 "@
-
-    # 发送刷新通知
     [RefreshExplorer]::SHChangeNotify(0x08000000, 0x0000, [IntPtr]::Zero, [IntPtr]::Zero)
-
 }
 catch {
+    [System.Windows.Forms.MessageBox]::Show('操作失败：' + $_.Exception.Message, '错误', 'OK', 'Error')
     exit
 }
 

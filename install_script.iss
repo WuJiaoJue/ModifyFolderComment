@@ -1,6 +1,6 @@
 ﻿[Setup]
 AppName=ModifyFolderComment
-AppVersion=1.0
+AppVersion=1.1.1
 DefaultDirName={commonpf}\ModifyFolderComment
 DefaultGroupName=ModifyFolderComment
 OutputBaseFilename=install

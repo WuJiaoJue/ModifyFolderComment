@@ -1,7 +1,7 @@
-# ModifyFolderComment 
+# windows右键文件夹添加备注信息
 
 ---
-### windouws右键文件夹添加备注信息
+### ModifyFolderComment
 
 ![Snipaste_2024-11-19_00-16-04.png](images/Snipaste_2024-11-19_00-16-04.png)
 
@@ -57,3 +57,10 @@ _`ModifyFolderComment.exe`为`ModifyFolderComment.ps1`打包而成的可执行�
 > Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment"; ValueData: "修改文件夹备注"
 > Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment\command"; ValueData: "wscript.exe \"{app}\RunModifyFolderComment.vbs\" \"%1\""
 > ```
+
+---
+
+## 已知问题
+- 添加或修改备注后无法及时在资源管理器中看到更新，通常需要等待几十秒到一分钟左右，系统才会自动更新显示内容
+
+  修改文件夹名称|移动desktop.ini文件到其他位置|触发资源管理器刷新 等操作均无法稳定触发有效更新； 重启资源管理器可以有效触发更新但属于破坏性操作风险太高不予考虑；

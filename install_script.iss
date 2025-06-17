@@ -1,6 +1,6 @@
 ﻿[Setup]
 AppName=ModifyFolderComment
-AppVersion=1.1.1
+AppVersion=1.1.13
 DefaultDirName={commonpf}\ModifyFolderComment
 DefaultGroupName=ModifyFolderComment
 OutputBaseFilename=install
@@ -14,6 +14,7 @@ Type: files; Name: "{app}\RunModifyFolderComment.vbs.bak"
 ; 包含可执行文件和脚本
 Source: "ModifyFolderComment.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RunModifyFolderComment.vbs"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ForceRefresh.vbs"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\ModifyFolderComment"; Filename: "{app}\ModifyFolderComment.exe"
@@ -44,5 +45,6 @@ begin
   if CurStep = ssPostInstall then
   begin
     ReplaceInFile(ExpandConstant('{app}\RunModifyFolderComment.vbs'), '{app}', ExpandConstant('{app}'));
+    ReplaceInFile(ExpandConstant('{app}\ForceRefresh.vbs'), '{app}', ExpandConstant('{app}'));
   end;
 end;

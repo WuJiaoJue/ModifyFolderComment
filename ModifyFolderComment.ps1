@@ -125,33 +125,54 @@ try {
     $iniPath = Join-Path $FolderPath 'desktop.ini'
     $iniHash = @{}
     if (Test-Path $iniPath) {
-        $iniContent = Get-Content $iniPath -Encoding Unicode
-        $currentSection = ''
-        foreach ($line in $iniContent) {
-            if ([string]::IsNullOrWhiteSpace($line)) { continue }
-            if ($line -match '^[\[](.*)[\]]$') {
-                $currentSection = $matches[1]
-                if (-not $iniHash.ContainsKey($currentSection)) {
-                    $iniHash[$currentSection] = @{}
-                }
-            } elseif ($line -match '^(.*?)=(.*)$') {
-                $key = $matches[1].Trim()
-                $value = $matches[2].Trim()
-                if (-not [string]::IsNullOrEmpty($currentSection)) {
-                    $iniHash[$currentSection][$key] = $value
+        try {
+            # 确保能正确读取 desktop.ini，尝试不同编码
+            $iniContent = $null
+            try {
+                $iniContent = Get-Content $iniPath -Encoding Unicode -ErrorAction Stop
+            } catch {
+                try {
+                    $iniContent = Get-Content $iniPath -Encoding Default -ErrorAction Stop
+                } catch {
+                    $iniContent = Get-Content $iniPath -ErrorAction Stop
                 }
             }
+
+            $currentSection = ''
+            foreach ($line in $iniContent) {
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                if ($line -match '^[\[](.*)[\]]$') {
+                    $currentSection = $matches[1]
+                    if (-not $iniHash.ContainsKey($currentSection)) {
+                        $iniHash[$currentSection] = @{}
+                    }
+                } elseif ($line -match '^(.*?)=(.*)$') {
+                    $key = $matches[1].Trim()
+                    $value = $matches[2].Trim()
+                    if (-not [string]::IsNullOrEmpty($currentSection)) {
+                        $iniHash[$currentSection][$key] = $value
+                    }
+                }
+            }
+        } catch {
+            # 如果读取失败，创建新的 desktop.ini
+            Write-Host "无法读取 desktop.ini，将创建新文件: $_" -ForegroundColor Yellow
         }
     }
+
+    # 确保存在 .ShellClassInfo 节
     if (-not $iniHash.ContainsKey('.ShellClassInfo')) {
         $iniHash['.ShellClassInfo'] = @{}
     }
+
+    # 设置备注信息
     if ([string]::IsNullOrWhiteSpace($comment)) {
         # 备注为空时删除 InfoTip 字段
         $iniHash['.ShellClassInfo'].Remove('InfoTip') | Out-Null
     } else {
         $iniHash['.ShellClassInfo']['InfoTip'] = $comment
     }
+
     # 清理空节
     $sectionsToRemove = @()
     foreach ($section in $iniHash.Keys) {
@@ -162,7 +183,8 @@ try {
     foreach ($section in $sectionsToRemove) {
         $iniHash.Remove($section)
     }
-    # 写回 desktop.ini
+
+    # 写回 desktop.ini - 确保使用正确的格式和编码
     $output = New-Object System.Collections.Generic.List[string]
     foreach ($section in $iniHash.Keys) {
         $output.Add("[$section]")
@@ -172,8 +194,138 @@ try {
         }
         $output.Add("")
     }
+
+    # 确保目录为系统属性
+    $folder = Get-Item $FolderPath
+    if (-not ($folder.Attributes -band [System.IO.FileAttributes]::System)) {
+        $folder.Attributes = $folder.Attributes -bor [System.IO.FileAttributes]::System
+    }
+
+    # 如果存在旧文件，先删除它
+    if (Test-Path $iniPath) {
+        Remove-Item -Path $iniPath -Force
+    }
+
+    # 写入新的 desktop.ini 文件
     Set-Content -Path $iniPath -Value $output -Encoding Unicode -Force
-    [System.IO.File]::SetAttributes($iniPath, 'Hidden, System')
+
+    # 设置 desktop.ini 属性为隐藏和系统
+    [System.IO.File]::SetAttributes($iniPath, [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::System)
+
+    # 直接在 PowerShell 中实现刷新机制，替代 ForceRefresh.vbs
+    try {
+        [System.Windows.Forms.MessageBox]::Show('开始执行刷新机制', '调试信息', 'OK', 'Information')
+
+        # 确保文件夹路径不为空且存在
+        if (-not [string]::IsNullOrEmpty($FolderPath) -and (Test-Path -Path $FolderPath -PathType Container)) {
+            # 设置当前 desktop.ini 文件路径
+            $desktopIniPath = Join-Path $FolderPath 'desktop.ini'
+            # 使用固定临时文件名，而非随机生成
+            $tempIniPath = Join-Path $FolderPath 'desktop.ini.tmp'
+
+            [System.Windows.Forms.MessageBox]::Show("刷新路径：$FolderPath`n设置备注：$comment`ndesktop.ini路径：$desktopIniPath", '调试信息', 'OK', 'Information')
+
+            # 等待文件系统操作完成
+            Start-Sleep -Milliseconds 200
+
+            # 获取 Shell.Application COM 对象
+            $shell = New-Object -ComObject Shell.Application
+            $folder = $shell.NameSpace($FolderPath)
+
+            # 使用 Try-Catch 块处理文件操作
+            try {
+                # 如果 desktop.ini 存在，先复制到临时文件
+                if (Test-Path -Path $desktopIniPath -PathType Leaf) {
+                    [System.Windows.Forms.MessageBox]::Show("desktop.ini 存在，执行复制操作", '调试信息', 'OK', 'Information')
+
+                    # 先删除可能存在的旧临时文件
+                    if (Test-Path -Path $tempIniPath) {
+                        Remove-Item -Path $tempIniPath -Force -ErrorAction SilentlyContinue
+                    }
+
+                    # 复制文件（不立即设置其属性）
+                    Copy-Item -Path $desktopIniPath -Destination $tempIniPath -Force -ErrorAction Stop
+
+                    # 确认临时文件创建成功后再操作
+                    Start-Sleep -Milliseconds 100
+                    if (Test-Path -Path $tempIniPath -PathType Leaf) {
+                        # 删除原始 desktop.ini (先删除目标后移动，避免权限问题)
+                        Remove-Item -Path $desktopIniPath -Force -ErrorAction SilentlyContinue
+
+                        # 检查删除是否成功
+                        if (-not (Test-Path -Path $desktopIniPath)) {
+                            [System.Windows.Forms.MessageBox]::Show("原始 desktop.ini 已删除，准备重命名临时文件", '调试信息', 'OK', 'Information')
+                        }
+
+                        # 先通过重命名移动文件，避免使用MoveHere导致的复杂性
+                        Rename-Item -Path $tempIniPath -NewName "desktop.ini" -Force
+
+                        # 确保设置了正确的文件属性
+                        if (Test-Path -Path $desktopIniPath -PathType Leaf) {
+                            [System.IO.File]::SetAttributes($desktopIniPath, [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::System)
+                            [System.Windows.Forms.MessageBox]::Show("重命名成功并设置了属性", '调试信息', 'OK', 'Information')
+
+                            # 通过Shell的方式刷新缓存
+                            $folder.MoveHere($desktopIniPath, 4+16+1024)
+                            [System.Windows.Forms.MessageBox]::Show("已执行 MoveHere 刷新操作", '调试信息', 'OK', 'Information')
+                        }
+                    }
+                } else {
+                    [System.Windows.Forms.MessageBox]::Show("desktop.ini 不存在，无需刷新", '调试信息', 'OK', 'Information')
+                }
+            }
+            catch {
+                [System.Windows.Forms.MessageBox]::Show("文件操作失败: $_", '调试错误', 'OK', 'Error')
+
+                # 紧急恢复：确保保留desktop.ini文件
+                if ((-not (Test-Path -Path $desktopIniPath)) -and (Test-Path -Path $tempIniPath)) {
+                    try {
+                        Rename-Item -Path $tempIniPath -NewName "desktop.ini" -Force
+                        if (Test-Path -Path $desktopIniPath) {
+                            [System.IO.File]::SetAttributes($desktopIniPath, [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::System)
+                            [System.Windows.Forms.MessageBox]::Show("紧急恢复完成", '调试信息', 'OK', 'Information')
+                        }
+                    }
+                    catch {
+                        [System.Windows.Forms.MessageBox]::Show("紧急恢复失败: $_", '调试错误', 'OK', 'Error')
+                    }
+                }
+            }
+            finally {
+                # 清理临时文件（如果还存在）
+                if (Test-Path -Path $tempIniPath) {
+                    try {
+                        Remove-Item -Path $tempIniPath -Force -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                        # 忽略清理错误
+                    }
+                }
+
+                # 释放 COM 对象
+                try {
+                    if ($null -ne $folder) {
+                        [System.Runtime.Interopservices.Marshal]::ReleaseComObject($folder) | Out-Null
+                    }
+                    if ($null -ne $shell) {
+                        [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shell) | Out-Null
+                    }
+                    [System.GC]::Collect()
+                    [System.GC]::WaitForPendingFinalizers()
+                }
+                catch {
+                    # 忽略 COM 对象释放错误
+                }
+            }
+        } else {
+            [System.Windows.Forms.MessageBox]::Show("文件夹路径无效: $FolderPath", '调试错误', 'OK', 'Error')
+        }
+    }
+    catch {
+        [System.Windows.Forms.MessageBox]::Show("刷新 shell 缓存失败: $_", '调试错误', 'OK', 'Error')
+        # 错误不会阻止主要功能
+    }
+
     # 强制资源管理器刷新
     Add-Type @"
 using System;

@@ -75,7 +75,7 @@ _`ModifyFolderComment.exe` 为 `ModifyFolderComment.ps1` 打包而成的可执�
 - 右键菜单注册表也可用 AddContextMenuOption.reg 手动导入。
 
 > install_script.iss 关键片段：
-> 
+>
 > VBScript & PowerShell 版本
 > ```ini
 > [Files]
@@ -99,10 +99,21 @@ _`ModifyFolderComment.exe` 为 `ModifyFolderComment.ps1` 打包而成的可执�
 > ```
 
 ---
+## TODO
+
+- [ ] VBScript & PowerShell 版本实现实时刷新备注
+- [ ] .NET8发布自包含版本（无需额外安装 .NET）
+- [ ] 添加设置-自定义相关配置项
+- [ ] 对“标签”的修改（待定）
+- [ ] 对CLI的支持
+- [ ] 压缩项目“体积”
+- [ ] 批量修改多个文件夹的备注信息
+- [ ] 对跟多类型的备注消息支持（待定）
 
 ## 已知问题
 - ~~添加或修改备注后无法及时在资源管理器中看到更新，通常需要等待几十秒到一分钟左右，系统才会自动更新显示内容~~
 
   ~~修改文件夹名称|移动desktop.ini文件到其他位置|触发资源管理器刷新 等操作均无法稳定触发有效更新； 重启资源管理器可以有效触发更新但属于破坏性操作风险太高不予考虑；~~
+  
     > 2025-07-12 更新：✅ **已在 .NET 版本优化**，仅在部分测试系统版本上测试，添加或修改备注后可以立即在资源管理器中看到更新。
   > 若项目存在问题，请卸载并安装 VBScript & PowerShell 版本，并在项目中提交 issue。

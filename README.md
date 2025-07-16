@@ -24,12 +24,12 @@ NEW !
 
 安装程序包含以下文件：
 
-VBScript & PowerShell 版本	![PowerShell](https://img.shields.io/badge/PowerShell-%233178C6?style=flat-square&logo=powershell&logoColor=white)![VBScript](https://img.shields.io/badge/VBScript-Classic%20Script-blueviolet?style=flat-square)
-- `ModifyFolderComment.exe`: 主程序文件。
+VBScript & PowerShell 版本（增强版，已同步 C# 功能）	![PowerShell](https://img.shields.io/badge/PowerShell-%233178C6?style=flat-square&logo=powershell&logoColor=white)![VBScript](https://img.shields.io/badge/VBScript-Classic%20Script-blueviolet?style=flat-square)
 
-- `RunModifyFolderComment.vbs`: 用于运行主程序的脚本文件。
-
-- `AddContextMenuOption.reg`: 注册表文件，用于添加右键菜单选项。
+- `ModifyFolderComment.ps1`: 增强版 PowerShell 主程序，支持实时刷新和自动权限提升
+- `AFC.ps1`: 增强版命令行 PowerShell 脚本
+- `RunModifyFolderComment.vbs`: 增强版 VBScript 包装器
+- `AddContextMenuOption.reg`: 注册表文件，用于添加右键菜单选项
 
 .NET 8.0版本（推荐，支持实时刷新备注信息，需要.NET环境)	[![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet&style=flat-square)](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
@@ -101,7 +101,7 @@ _`ModifyFolderComment.exe` 为 `ModifyFolderComment.ps1` 打包而成的可执�
 ---
 ## TODO
 
-- [ ] VBScript & PowerShell 版本实现实时刷新备注
+- [x] ~~VBScript & PowerShell 版本实现实时刷新备注~~ ✅ **已完成** - 已同步 C# 版本的高级刷新功能
 - [ ] .NET8发布自包含版本（无需额外安装 .NET）
 - [ ] 添加设置-自定义相关配置项
 - [ ] 对“标签”的修改（待定）
@@ -115,5 +115,25 @@ _`ModifyFolderComment.exe` 为 `ModifyFolderComment.ps1` 打包而成的可执�
 
   ~~修改文件夹名称|移动desktop.ini文件到其他位置|触发资源管理器刷新 等操作均无法稳定触发有效更新； 重启资源管理器可以有效触发更新但属于破坏性操作风险太高不予考虑；~~
   
-    > 2025-07-12 更新：✅ **已在 .NET 版本优化**，仅在部分测试系统版本上测试，添加或修改备注后可以立即在资源管理器中看到更新。
-  > 若项目存在问题，请卸载并安装 VBScript & PowerShell 版本，并在项目中提交 issue。
+    > 2025-07-16 更新：✅ **已在所有版本优化**
+    > - **.NET 版本**：已实现高级刷新功能，可立即在资源管理器中看到更新
+    > - **PowerShell & VBScript 版本**：已同步 .NET 版本的高级刷新功能，包括：
+    >   - 使用 Shell.Application COM 对象的 MoveHere 方法进行高级刷新
+    >   - 自动权限提升机制
+    >   - 更加健壮的 desktop.ini 文件管理
+    >   - 增强的错误处理和用户反馈
+    > 
+    > 若项目存在问题，请在项目中提交 issue。
+
+## 版本功能对比
+
+| 功能特性 | .NET 8.0 版本 | PowerShell & VBScript 版本 |
+|---------|---------------|---------------------------|
+| 基础备注功能 | ✅ | ✅ |
+| 图形界面 | ✅ | ✅ |
+| 命令行支持 | ✅ | ✅ (AFC.ps1) |
+| 实时刷新 | ✅ | ✅ (新增) |
+| 自动权限提升 | ✅ | ✅ (新增) |
+| 健壮的 INI 管理 | ✅ | ✅ (新增) |
+| 错误处理 | ✅ | ✅ (增强) |
+| 无需 .NET 环境 | ❌ | ✅ |

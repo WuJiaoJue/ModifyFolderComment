@@ -1,9 +1,9 @@
 [Setup]
 AppName=ModifyFolderComment PowerShell版
-AppVersion=1.1.63p
+AppVersion=1.1.64p
 DefaultDirName={commonpf}\ModifyFolderComment
 DefaultGroupName=ModifyFolderComment
-OutputBaseFilename=ModifyFolderComment_Setup
+OutputBaseFilename=install_powershell
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64

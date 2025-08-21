@@ -1,7 +1,9 @@
-# windows右键文件夹添加备注信息
+# windows 右键文件夹添加备注信息
 
 ---
-### ModifyFolderComment
+# 📝 ModifyFolderComment
+
+[![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet&style=flat-square)](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)![PowerShell](https://img.shields.io/badge/PowerShell-%233178C6?style=flat-square&logo=powershell&logoColor=white)![VBScript](https://img.shields.io/badge/VBScript-Classic%20Script-blueviolet?style=flat-square)[![Setup](https://img.shields.io/badge/setup-InnoSetup-orange?style=flat-square)]()[![Platform](https://img.shields.io/badge/platform-Windows-blue?style=flat-square&logo=windows)]()[![License](https://img.shields.io/github/license/WuJiaoJue/ModifyFolderComment?style=flat-square)](LICENSE)[![Release](https://img.shields.io/github/v/release/WuJiaoJue/ModifyFolderComment?style=flat-square)](https://github.com/WuJiaoJue/ModifyFolderComment/releases)
 
 ![Snipaste_2024-11-19_00-16-04.png](images/Snipaste_2024-11-19_00-16-04.png)
 
@@ -16,22 +18,46 @@
 
 ## 文件
 
+NEW !
+> C# .Net 8.0 重构的修改文件夹注释
+
+
 安装程序包含以下文件：
 
-- `ModifyFolderComment.exe`: 主程序文件。
-- `RunModifyFolderComment.vbs`: 用于运行主程序的脚本文件。
-- `AddContextMenuOption.reg`: 注册表文件，用于添加右键菜单选项。
+VBScript & PowerShell 版本（增强版，已同步 C# 功能）	![PowerShell](https://img.shields.io/badge/PowerShell-%233178C6?style=flat-square&logo=powershell&logoColor=white)![VBScript](https://img.shields.io/badge/VBScript-Classic%20Script-blueviolet?style=flat-square)
 
-_`ModifyFolderComment.exe`为`ModifyFolderComment.ps1`打包而成的可执行文件，不信任的自行下载`ModifyFolderComment.ps1`文件打包。_
+- `ModifyFolderComment.ps1`: 增强版 PowerShell 主程序，支持实时刷新和自动权限提升
+- `AFC.ps1`: 增强版命令行 PowerShell 脚本
+- `RunModifyFolderComment.vbs`: 增强版 VBScript 包装器
+- `AddContextMenuOption.reg`: 注册表文件，用于添加右键菜单选项
+
+.NET 8.0版本（推荐，支持实时刷新备注信息，需要.NET环境)	[![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet&style=flat-square)](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+
+- `Program.cs`: 应用入口，处理参数与权限校验
+
+- `FolderCommentForm.cs`: 主窗体，图形界面交互
+
+- `DesktopIniManager.cs`: 读写 `desktop.ini`，管理注释文本
+
+- `FolderRefresher.cs`: 通知系统刷新资源管理器显示状态
+
+_`ModifyFolderComment.exe` 为 `ModifyFolderComment.ps1` 打包而成的可执行文件，不信任的自行下载 `ModifyFolderComment.ps1` 文件打包。_
 > 打包命令
+> VBScript & PowerShell 版本
+>
 > ```powershell
 > Invoke-PS2EXE -InputFile "ModifyFolderComment.ps1" -OutputFile "ModifyFolderComment.exe" -NoConsole -requireAdmin
 > ```
+> .NET 8.0版本
+> ```powershell
+> dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+> ```
+
 
 
 ## 运行
 
-在资源管理器中，右键单击文件夹，选择 "修改文件夹备注" 选项。在弹出的对话框中输入备注信息，然后单击 "确定"。
+在资源管理器中，右键单击文件夹，选择 "修改文件夹备注" 选项。在弹出的对话框中输入备注信息，然后单击 "确定" 或按回车。
 
 ## 卸载
 
@@ -49,6 +75,8 @@ _`ModifyFolderComment.exe`为`ModifyFolderComment.ps1`打包而成的可执行�
 - 右键菜单注册表也可用 AddContextMenuOption.reg 手动导入。
 
 > install_script.iss 关键片段：
+>
+> VBScript & PowerShell 版本
 > ```ini
 > [Files]
 > Source: "ModifyFolderComment.exe"; DestDir: "{app}"
@@ -57,10 +85,55 @@ _`ModifyFolderComment.exe`为`ModifyFolderComment.ps1`打包而成的可执行�
 > Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment"; ValueData: "修改文件夹备注"
 > Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment\command"; ValueData: "wscript.exe \"{app}\RunModifyFolderComment.vbs\" \"%1\""
 > ```
+> .NET 8.0版本
+> ```ini
+> [Files]
+> Source: "bin\Release\net8.0-windows\win-x64\publish\ModifyFolderComment.exe"; DestDir: "{app}"; Flags: ignoreversion
+> 
+> [Icons]
+> Name: "{group}\ModifyFolderComment"; Filename: "{app}\ModifyFolderComment.exe"
+> 
+> [Registry]
+> Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment"; ValueType: string; ValueName: ""; ValueData: "修改文件夹备注"; Flags: uninsdeletekey
+> Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment\command"; ValueType: string; ValueName: ""; ValueData: """{app}\ModifyFolderComment.exe"" ""%1"""; Flags: uninsdeletevalue
+> ```
 
 ---
+## TODO
+
+- [x] ~~VBScript & PowerShell 版本实现实时刷新备注~~ ✅ **已完成** - 已同步 C# 版本的高级刷新功能
+- [ ] .NET8发布自包含版本（无需额外安装 .NET）
+- [ ] 添加设置-自定义相关配置项
+- [ ] 对“标签”的修改（待定）
+- [ ] 对CLI的支持
+- [ ] 压缩项目“体积”
+- [ ] 批量修改多个文件夹的备注信息
+- [ ] 对跟多类型的备注消息支持（待定）
 
 ## 已知问题
-- 添加或修改备注后无法及时在资源管理器中看到更新，通常需要等待几十秒到一分钟左右，系统才会自动更新显示内容
+- ~~添加或修改备注后无法及时在资源管理器中看到更新，通常需要等待几十秒到一分钟左右，系统才会自动更新显示内容~~
 
-  修改文件夹名称|移动desktop.ini文件到其他位置|触发资源管理器刷新 等操作均无法稳定触发有效更新； 重启资源管理器可以有效触发更新但属于破坏性操作风险太高不予考虑；
+  ~~修改文件夹名称|移动desktop.ini文件到其他位置|触发资源管理器刷新 等操作均无法稳定触发有效更新； 重启资源管理器可以有效触发更新但属于破坏性操作风险太高不予考虑；~~
+  
+    > 2025-07-16 更新：✅ **已在所有版本优化**
+    > - **.NET 版本**：已实现高级刷新功能，可立即在资源管理器中看到更新
+    > - **PowerShell & VBScript 版本**：已同步 .NET 版本的高级刷新功能，包括：
+    >   - 使用 Shell.Application COM 对象的 MoveHere 方法进行高级刷新
+    >   - 自动权限提升机制
+    >   - 更加健壮的 desktop.ini 文件管理
+    >   - 增强的错误处理和用户反馈
+    > 
+    > 若项目存在问题，请在项目中提交 issue。
+
+## 版本功能对比
+
+| 功能特性 | .NET 8.0 版本 | PowerShell & VBScript 版本 |
+|---------|---------------|---------------------------|
+| 基础备注功能 | ✅ | ✅ |
+| 图形界面 | ✅ | ✅ |
+| 命令行支持 | ✅ | ✅ (AFC.ps1) |
+| 实时刷新 | ✅ | ✅ (新增) |
+| 自动权限提升 | ✅ | ✅ (新增) |
+| 健壮的 INI 管理 | ✅ | ✅ (新增) |
+| 错误处理 | ✅ | ✅ (增强) |
+| 无需 .NET 环境 | ❌ | ✅ |

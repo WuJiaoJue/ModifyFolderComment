@@ -1,50 +1,35 @@
-﻿[Setup]
-AppName=ModifyFolderComment
-AppVersion=1.1.13
+[Setup]
+AppName=ModifyFolderComment PowerShell版
+AppVersion=1.1.62p
 DefaultDirName={commonpf}\ModifyFolderComment
 DefaultGroupName=ModifyFolderComment
-OutputBaseFilename=install
+OutputBaseFilename=ModifyFolderComment_Setup
 Compression=lzma2
 SolidCompression=yes
-
-[InstallDelete]
-Type: files; Name: "{app}\RunModifyFolderComment.vbs.bak"
+ArchitecturesInstallIn64BitMode=x64
+UninstallDisplayName=ModifyFolderComment PowerShell版
+UninstallDisplayIcon={app}\ModifyFolderComment.ps1
 
 [Files]
-; 包含可执行文件和脚本
-Source: "ModifyFolderComment.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ModifyFolderComment.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RunModifyFolderComment.vbs"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ForceRefresh.vbs"; DestDir: "{app}"; Flags: ignoreversion
-
-[Icons]
-Name: "{group}\ModifyFolderComment"; Filename: "{app}\ModifyFolderComment.exe"
+Source: "AFC.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
-; 导入注册表文件
 Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment"; ValueType: string; ValueName: ""; ValueData: "修改文件夹备注"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\shell\ModifyFolderComment\command"; ValueType: string; ValueName: ""; ValueData: "wscript.exe ""{app}\RunModifyFolderComment.vbs"" ""%1"""; Flags: uninsdeletevalue
 
+[Icons]
+Name: "{group}\修改文件夹备注 (命令行)"; Filename: "powershell.exe"; Parameters: "-File ""{app}\AFC.ps1"" -h"; WorkingDir: "{app}"
+Name: "{group}\卸载 ModifyFolderComment"; Filename: "{uninstallexe}"
+
 [Code]
-procedure ReplaceInFile(const FileName, SearchString, ReplaceString: string);
-var
-  Lines: TArrayOfString;
-  i: Integer;
+function InitializeSetup(): Boolean;
 begin
-  if LoadStringsFromFile(FileName, Lines) then
-  begin
-    for i := 0 to GetArrayLength(Lines) - 1 do
-    begin
-      StringChangeEx(Lines[i], SearchString, ReplaceString, True);
-    end;
-    SaveStringsToFile(FileName, Lines, False);
-  end;
+  Result := True;
+  if MsgBox('此程序需要PowerShell执行权限。安装后可能需要设置执行策略。' + #13#10 + '是否继续安装？', mbConfirmation, MB_YESNO) = IDNO then
+    Result := False;
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    ReplaceInFile(ExpandConstant('{app}\RunModifyFolderComment.vbs'), '{app}', ExpandConstant('{app}'));
-    ReplaceInFile(ExpandConstant('{app}\ForceRefresh.vbs'), '{app}', ExpandConstant('{app}'));
-  end;
-end;
+[Run]
+Filename: "powershell.exe"; Parameters: "-Command ""Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force"""; Flags: runhidden; Description: "设置PowerShell执行策略"

@@ -1,6 +1,6 @@
 [Setup]
 AppName=ModifyFolderComment PowerShell版
-AppVersion=1.1.62p
+AppVersion=1.1.63p
 DefaultDirName={commonpf}\ModifyFolderComment
 DefaultGroupName=ModifyFolderComment
 OutputBaseFilename=ModifyFolderComment_Setup

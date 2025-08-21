@@ -3,7 +3,7 @@ Set objFSO = CreateObject("Scripting.FileSystemObject")
 
 ' 获取文件夹路径参数
 If WScript.Arguments.Count = 0 Then
-    MsgBox "请通过右键菜单调用此程序。", vbExclamation, "参数缺失"
+    MsgBox "请从右键菜单中调用此程序.", vbExclamation, "缺少参数"
     WScript.Quit
 End If
 
@@ -11,7 +11,7 @@ folderPath = WScript.Arguments(0)
 
 ' 检查文件夹是否存在
 If Not objFSO.FolderExists(folderPath) Then
-    MsgBox "文件夹路径无效。", vbCritical, "错误"
+    MsgBox "文件夹路径无效.", vbCritical, "错误"
     WScript.Quit
 End If
 
@@ -21,7 +21,7 @@ psScriptPath = objFSO.BuildPath(scriptDir, "ModifyFolderComment.ps1")
 
 ' 检查PowerShell脚本是否存在
 If Not objFSO.FileExists(psScriptPath) Then
-    MsgBox "找不到 ModifyFolderComment.ps1 文件。", vbCritical, "错误"
+    MsgBox "找不到 ModifyFolderComment.ps1 文件.", vbCritical, "错误"
     WScript.Quit
 End If
 
@@ -29,4 +29,4 @@ End If
 psCommand = "powershell.exe -ExecutionPolicy Bypass -File """ & psScriptPath & """ -FolderPath """ & folderPath & """"
 
 ' 执行PowerShell脚本
-objShell.ShellExecute "powershell.exe", "-ExecutionPolicy Bypass -File """ & psScriptPath & """ -FolderPath """ & folderPath & """", "", "open", 1
+objShell.ShellExecute "powershell.exe", "-ExecutionPolicy Bypass -WindowStyle Hidden -File """ & psScriptPath & """ -FolderPath """ & folderPath & """", "", "open", 0

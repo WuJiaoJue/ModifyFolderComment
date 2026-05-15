@@ -228,7 +228,7 @@ function Invoke-FolderRefresh {
     # 清理残留文件
     try {
         Get-ChildItem -Path $FolderPath -Force -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -like "desktop*.ini" -or $_.Name -like "ini*.tmp" -or $_.Name -like "~$*" } |
+            Where-Object { $_.Name -like "desktop_*.ini" -or $_.Name -like "ini*.tmp" -or $_.Name -like "~$*" } |
             ForEach-Object {
                 Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
                 Write-Verbose "已清理残留文件: $($_.Name)"
